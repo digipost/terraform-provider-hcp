@@ -1,4 +1,4 @@
-package terraform_provider_hcp
+package main
 
 import (
 	"github.com/digipost/terraform-provider-hcp/hcp"
