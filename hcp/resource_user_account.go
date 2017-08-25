@@ -73,7 +73,7 @@ func resourceHCPUserAccount() *schema.Resource {
 func resourceHCPUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 	hcpClient := hcpClient(m)
 
-	username := d.Get("name").(string)
+	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
 
