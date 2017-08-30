@@ -89,7 +89,18 @@ func resourceHCPUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceHCPUserAccountRead(d *schema.ResourceData, m interface{}) error {
-	return nil
+	hcpClient := hcpClient(m)
+
+	username := d.Id()
+	if _, err := hcpClient.UserAccount(username); err == nil {
+
+		return nil
+
+	} else {
+		// TODO
+		return err
+	}
+
 }
 
 func resourceHCPUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
