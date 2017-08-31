@@ -104,10 +104,9 @@ func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m in
 }
 
 func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
-	hcpClient := hcpClient(m)
 
-	username := d.Id()
-	if _, err := hcpClient.UserAccount(username); err == nil {
+	username := d.Get("username").(string)
+	if _, err := hcpClient(m).UserAccount(username); err == nil {
 
 		return nil
 
@@ -119,9 +118,11 @@ func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserAccountDelete(d *schema.ResourceData, m interface{}) error {
-	return nil
+	username := d.Get("username").(string)
+	return hcpClient(m).DeleteUserAccount(username)
 }
 
-func resourceUserAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	return false, nil
+func resourceUserAccountExists(d *schema.ResourceData, m interface{}) (bool, error) {
+	username := d.Get("username").(string)
+	return hcpClient(m).UserAccountExists(username)
 }
