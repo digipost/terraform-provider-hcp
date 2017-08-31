@@ -106,12 +106,10 @@ func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m in
 func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 
 	username := d.Get("username").(string)
-	if _, err := hcpClient(m).UserAccount(username); err == nil {
-
+	if userAccount, err := hcpClient(m).UserAccount(username); err == nil {
+		d.Set("full_name", userAccount.FullName)
 		return nil
-
 	} else {
-		// TODO
 		return err
 	}
 
