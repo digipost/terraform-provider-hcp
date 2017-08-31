@@ -1,29 +1,29 @@
 package hcp
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/digipost/hcp"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 /**
-    <name>Accounts-Receivable</name>
-    <hashScheme>SHA-256</hashScheme>
-    <enterpriseMode>true</enterpriseMode>
-    <hardQuota>50 GB</hardQuota>
-    <softQuota>75</softQuota>
-    <optimizedFor>ALL</optimizedFor>
-    <versioningSettings>
-        <enabled>true</enabled>
-        <prune>true</prune>
-        <pruneDays>10</pruneDays>
-    </versioningSettings>
-    <searchEnabled>true</searchEnabled>
-    <indexingEnabled>true</indexingEnabled>
-    <customMetadataIndexingEnabled>true</customMetadataIndexingEnabled>
-    <replicationEnabled>true</replicationEnabled>
-    <readFromReplica>true</readFromReplica>
-    <serviceRemoteSystemRequests>true</serviceRemoteSystemRequests>
- */
+  <name>Accounts-Receivable</name>
+  <hashScheme>SHA-256</hashScheme>
+  <enterpriseMode>true</enterpriseMode>
+  <hardQuota>50 GB</hardQuota>
+  <softQuota>75</softQuota>
+  <optimizedFor>ALL</optimizedFor>
+  <versioningSettings>
+      <enabled>true</enabled>
+      <prune>true</prune>
+      <pruneDays>10</pruneDays>
+  </versioningSettings>
+  <searchEnabled>true</searchEnabled>
+  <indexingEnabled>true</indexingEnabled>
+  <customMetadataIndexingEnabled>true</customMetadataIndexingEnabled>
+  <replicationEnabled>true</replicationEnabled>
+  <readFromReplica>true</readFromReplica>
+  <serviceRemoteSystemRequests>true</serviceRemoteSystemRequests>
+*/
 func resourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNamespaceCreate,
