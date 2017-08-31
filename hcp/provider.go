@@ -29,7 +29,8 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"hcp_user_account": resourceHCPUserAccount(),
+			"hcp_user_account": resourceUserAccount(),
+			"hcp_namespace":    resourceNamespace(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

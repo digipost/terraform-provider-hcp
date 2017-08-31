@@ -37,13 +37,13 @@ resource "hcp_user_account" "foo" {
 }
 */
 
-func resourceHCPUserAccount() *schema.Resource {
+func resourceUserAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHCPUserAccountCreate,
-		Read:   resourceHCPUserAccountRead,
-		Update: resourceHCPUserAccountUpdate,
-		Delete: resourceHCPUserAccountDelete,
-		Exists: resourceHCPUserAccountExists,
+		Create: resourceUserAccountCreate,
+		Read:   resourceUserAccountRead,
+		Update: resourceUserAccountUpdate,
+		Delete: resourceUserAccountDelete,
+		Exists: resourceUserAccountExists,
 		Schema: map[string]*schema.Schema{
 			"username": &schema.Schema{
 				Type:     schema.TypeString,
@@ -70,7 +70,7 @@ func resourceHCPUserAccount() *schema.Resource {
 	}
 }
 
-func resourceHCPUserAccountCreate(d *schema.ResourceData, m interface{}) error {
+func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 	hcpClient := hcpClient(m)
 
 	username := d.Get("username").(string)
@@ -88,7 +88,7 @@ func resourceHCPUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 
 }
 
-func resourceHCPUserAccountRead(d *schema.ResourceData, m interface{}) error {
+func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 	hcpClient := hcpClient(m)
 
 	username := d.Id()
@@ -103,14 +103,14 @@ func resourceHCPUserAccountRead(d *schema.ResourceData, m interface{}) error {
 
 }
 
-func resourceHCPUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceHCPUserAccountDelete(d *schema.ResourceData, m interface{}) error {
+func resourceUserAccountDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceHCPUserAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+func resourceUserAccountExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	return false, nil
 }
