@@ -71,6 +71,14 @@ func resourceUserAccount() *schema.Resource {
 }
 
 func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
+	return resourceUserAccountCreateOrUpdate(true, d, m)
+}
+
+func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
+	return resourceUserAccountCreateOrUpdate(false, d, m)
+}
+
+func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m interface{}) error {
 	hcpClient := hcpClient(m)
 
 	username := d.Get("username").(string)
@@ -79,7 +87,14 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 
 	uA := &hcp.UserAccount{Username: username, FullName: fullName}
 
-	if err := hcpClient.CreateUserAccount(uA, password); err == nil {
+	var err error
+	if create {
+		err = hcpClient.CreateUserAccount(uA, password)
+	} else {
+		err = hcpClient.UpdateUserAccount(uA, password)
+	}
+
+	if err == nil {
 		d.SetId(username)
 		return nil
 	} else {
@@ -101,10 +116,6 @@ func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-}
-
-func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
-	return nil
 }
 
 func resourceUserAccountDelete(d *schema.ResourceData, m interface{}) error {
