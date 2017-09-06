@@ -9,6 +9,7 @@ const defaultLocalAuthentication = true
 const defaultEnabled = true
 const defaultForcePasswordChange = false
 const defaultDescription = "User is managed by Terraform"
+const defaultAllowNamespaceManagement = false
 
 func resourceUserAccount() *schema.Resource {
 	return &schema.Resource{
@@ -50,7 +51,7 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 		LocalAuthentication:      defaultLocalAuthentication,
 		ForcePasswordChange:      defaultForcePasswordChange,
 		Enabled:                  defaultEnabled,
-		AllowNamespaceManagement: false,
+		AllowNamespaceManagement: defaultAllowNamespaceManagement,
 	}
 
 	if err := hcpClient(m).CreateUserAccount(uA, password); err == nil {
@@ -74,7 +75,7 @@ func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 		Description:              defaultDescription,
 		ForcePasswordChange:      defaultForcePasswordChange,
 		Enabled:                  defaultEnabled,
-		AllowNamespaceManagement: false,
+		AllowNamespaceManagement: defaultAllowNamespaceManagement,
 	}
 
 	if err := hcpClient(m).UpdateUserAccount(uA, password); err == nil {
