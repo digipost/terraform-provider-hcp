@@ -5,18 +5,10 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-/*
-resource "hcp_user_account" "foo" {
-    // internal User ID: abdd0999-92db-4c20-b578-f6ff353a4d01
-
-    // Required (can be renamed)
-    username = "Username"
-
-    // Required
-    full_name = "Full Name"
-
-}
-*/
+const defaultLocalAuthentication = true
+const defaultEnabled = true
+const defaultForcePasswordChange = false
+const defaultDescription = "User is managed by Terraform"
 
 func resourceUserAccount() *schema.Resource {
 	return &schema.Resource{
@@ -45,15 +37,6 @@ func resourceUserAccount() *schema.Resource {
 }
 
 func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
-	return resourceUserAccountCreateOrUpdate(true, d, m)
-}
-
-func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceUserAccountCreateOrUpdate(false, d, m)
-}
-
-func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m interface{}) error {
-	hcpClient := hcpClient(m)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -62,27 +45,43 @@ func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m in
 	uA := &hcp.UserAccount{
 		Username:                 username,
 		FullName:                 fullName,
-		Description:              "User is managed by Terraform",
-		LocalAuthentication:      true,
-		ForcePasswordChange:      true,
-		Enabled:                  true,
+		Description:              defaultDescription,
+		LocalAuthentication:      defaultLocalAuthentication,
+		ForcePasswordChange:      defaultForcePasswordChange,
+		Enabled:                  defaultEnabled,
 		AllowNamespaceManagement: false,
 	}
 
-	var err error
-	if create {
-		err = hcpClient.CreateUserAccount(uA, password)
-	} else {
-		err = hcpClient.UpdateUserAccount(uA, password)
-	}
-
-	if err == nil {
+	if err := hcpClient(m).CreateUserAccount(uA, password); err == nil {
 		d.SetId(username)
 		return nil
 	} else {
 		return err
 	}
 
+}
+
+func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
+
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	fullName := d.Get("full_name").(string)
+
+	uA := &hcp.UserAccount{
+		Username:                 username,
+		FullName:                 fullName,
+		Description:              defaultDescription,
+		ForcePasswordChange:      defaultForcePasswordChange,
+		Enabled:                  defaultEnabled,
+		AllowNamespaceManagement: false,
+	}
+
+	if err := hcpClient(m).UpdateUserAccount(uA, password); err == nil {
+		d.SetId(username)
+		return nil
+	} else {
+		return err
+	}
 }
 
 func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
