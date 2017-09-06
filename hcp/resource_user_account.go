@@ -15,25 +15,6 @@ resource "hcp_user_account" "foo" {
     // Required
     full_name = "Full Name"
 
-     // Optional
-    roles = ["COMPLIANCE", "SECURITY"] // default empty
-
-    --------
-
-    // Optional
-    description = "Description" // default empty
-
-    // Optional
-    localAuthentication = "true" // default
-
-    // Optional
-    forcePasswordChange = "false" // default
-
-    // Optional
-    enabled = "true" // default
-
-    // Optional
-    allowNamespaceManagement = "false" // default
 }
 */
 
@@ -59,13 +40,6 @@ func resourceUserAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"roles": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 		},
 	}
 }
@@ -85,7 +59,15 @@ func resourceUserAccountCreateOrUpdate(create bool, d *schema.ResourceData, m in
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
 
-	uA := &hcp.UserAccount{Username: username, FullName: fullName}
+	uA := &hcp.UserAccount{
+		Username:                 username,
+		FullName:                 fullName,
+		Description:              "User is managed by Terraform",
+		LocalAuthentication:      true,
+		ForcePasswordChange:      true,
+		Enabled:                  true,
+		AllowNamespaceManagement: false,
+	}
 
 	var err error
 	if create {
