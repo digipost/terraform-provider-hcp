@@ -24,8 +24,9 @@ func resourceUserAccount() *schema.Resource {
 				ForceNew: true,
 			},
 			"password": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 
 			"full_name": &schema.Schema{
