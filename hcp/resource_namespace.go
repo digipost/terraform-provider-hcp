@@ -32,28 +32,28 @@ func resourceNamespace() *schema.Resource {
 		Delete: resourceNamespaceDelete,
 		Exists: resourceNamespaceExists,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false, //
+				ForceNew: false,
 			},
-			"hash_scheme": &schema.Schema{
+			"hash_scheme": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"enterprise_mode": &schema.Schema{
+			"enterprise_mode": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"hard_quota": &schema.Schema{
+			"hard_quota": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"soft_quota": &schema.Schema{
+			"soft_quota": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"replication_enabled": &schema.Schema{
+			"replication_enabled": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},

@@ -9,19 +9,19 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("HCP_USERNAME", nil),
 				Description: "The username to use for HCP MAPI operations.",
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("HCP_PASSWORD", nil),
 				Description: "The password to use for HCP MAPI operations.",
 			},
-			"mapi_url": &schema.Schema{
+			"mapi_url": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("HCP_MAPI_URL", nil),

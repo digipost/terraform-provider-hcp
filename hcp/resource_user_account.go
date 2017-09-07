@@ -24,19 +24,19 @@ func resourceUserAccount() *schema.Resource {
 		Delete: resourceUserAccountDelete,
 		Exists: resourceUserAccountExists,
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:             schema.TypeString,
 				Required:         true,
 				Sensitive:        true,
 				DiffSuppressFunc: suppressPasswordDiffs,
 			},
 
-			"full_name": &schema.Schema{
+			"full_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
