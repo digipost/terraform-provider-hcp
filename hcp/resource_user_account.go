@@ -3,13 +3,18 @@ package hcp
 import (
 	"github.com/digipost/hcp"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 )
 
-const defaultLocalAuthentication = true
-const defaultEnabled = true
-const defaultForcePasswordChange = false
-const defaultDescription = "User is managed by Terraform"
-const defaultAllowNamespaceManagement = false
+const (
+	defaultLocalAuthentication      = true
+	defaultEnabled                  = true
+	defaultForcePasswordChange      = false
+	defaultDescription              = "User is managed by Terraform"
+	defaultAllowNamespaceManagement = false
+)
+
+var defaultRoles = []string{hcp.MONITOR}
 
 func resourceUserAccount() *schema.Resource {
 	return &schema.Resource{
@@ -25,9 +30,10 @@ func resourceUserAccount() *schema.Resource {
 				ForceNew: true,
 			},
 			"password": &schema.Schema{
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				Sensitive:        true,
+				DiffSuppressFunc: suppressPasswordDiffs,
 			},
 
 			"full_name": &schema.Schema{
@@ -52,10 +58,12 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 		ForcePasswordChange:      defaultForcePasswordChange,
 		Enabled:                  defaultEnabled,
 		AllowNamespaceManagement: defaultAllowNamespaceManagement,
+		Roles: defaultRoles,
 	}
 
 	if err := hcpClient(m).CreateUserAccount(uA, password); err == nil {
 		d.SetId(username)
+		d.Set("password", sha512sum(password))
 		return nil
 	} else {
 		return err
@@ -76,13 +84,28 @@ func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 		ForcePasswordChange:      defaultForcePasswordChange,
 		Enabled:                  defaultEnabled,
 		AllowNamespaceManagement: defaultAllowNamespaceManagement,
+		Roles: defaultRoles,
 	}
 
-	if err := hcpClient(m).UpdateUserAccount(uA, password); err == nil {
-		d.SetId(username)
-		return nil
+	hasPasswordChange := d.HasChange("password")
+	log.Printf("[DEBUG] resourceUserAccountUpdate - hasPasswordChange = %t", hasPasswordChange)
+	if hasPasswordChange {
+		if err := hcpClient(m).UpdateUserAccount(uA, password); err == nil {
+			d.SetId(username)
+			d.Set("password", sha512sum(password))
+			return nil
+		} else {
+			return err
+		}
+
 	} else {
-		return err
+
+		if err := hcpClient(m).UpdateUserAccountExceptPassword(uA); err == nil {
+			d.SetId(username)
+			return nil
+		} else {
+			return err
+		}
 	}
 }
 
