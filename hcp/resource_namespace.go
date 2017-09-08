@@ -5,25 +5,16 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-/**
-  <name>Accounts-Receivable</name>
-  <hashScheme>SHA-256</hashScheme>
-  <enterpriseMode>true</enterpriseMode>
-  <hardQuota>50 GB</hardQuota>
-  <softQuota>75</softQuota>
-  <optimizedFor>ALL</optimizedFor>
-  <versioningSettings>
-      <enabled>true</enabled>
-      <prune>true</prune>
-      <pruneDays>10</pruneDays>
-  </versioningSettings>
-  <searchEnabled>true</searchEnabled>
-  <indexingEnabled>true</indexingEnabled>
-  <customMetadataIndexingEnabled>true</customMetadataIndexingEnabled>
-  <replicationEnabled>true</replicationEnabled>
-  <readFromReplica>true</readFromReplica>
-  <serviceRemoteSystemRequests>true</serviceRemoteSystemRequests>
-*/
+const (
+	defaultHashScheme                    = hcp.SHA_512
+	defaultEnterpriseMode                = true
+	defaultOptimizedFor                  = hcp.CLOUD
+	defaultSearchEnabled                 = false
+	defaultIndexingEnabled               = false
+	defaultCustomMetadataIndexingEnabled = false
+	deafultServiceRemoteSystemRequests   = false
+)
+
 func resourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNamespaceCreate,
@@ -37,17 +28,10 @@ func resourceNamespace() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
-			"hash_scheme": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"enterprise_mode": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
 			"hard_quota": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateHardQuota,
 			},
 			"soft_quota": {
 				Type:     schema.TypeInt,
@@ -57,36 +41,81 @@ func resourceNamespace() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
+			"read_from_replica": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"versioning_settings": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"prune": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"prune_days": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  10,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
-	hcpClient := hcpClient(m)
 
 	name := d.Get("name").(string)
-	hashScheme := d.Get("hash_scheme").(string)
-	enterpriseMode := d.Get("enterprise_mode").(bool)
 	hardQuota := d.Get("hard_quota").(string)
 	softQuota := d.Get("soft_quota").(int)
 	replicationEnabled := d.Get("replication_enabled").(bool)
+	readFromReplica := d.Get("read_from_replica").(bool)
+
+	v := d.Get("versioning_settings").([]interface{})
+	versioningSettings := expandVersioningSettings(v)
 
 	namespace := &hcp.Namespace{
-		Name:               name,
-		HashScheme:         hashScheme,
-		EnterpriseMode:     enterpriseMode,
-		HardQuota:          hardQuota,
-		SoftQuota:          softQuota,
-		ReplicationEnabled: replicationEnabled,
+		Name:                          name,
+		HardQuota:                     hardQuota,
+		SoftQuota:                     softQuota,
+		ReplicationEnabled:            replicationEnabled,
+		ReadFromReplica:               readFromReplica,
+		HashScheme:                    defaultHashScheme,
+		EnterpriseMode:                defaultEnterpriseMode,
+		OptimizedFor:                  defaultOptimizedFor,
+		SearchEnabled:                 defaultSearchEnabled,
+		IndexingEnabled:               defaultIndexingEnabled,
+		CustomMetadataIndexingEnabled: defaultCustomMetadataIndexingEnabled,
+		ServiceRemoteSystemRequests:   deafultServiceRemoteSystemRequests,
+		VersioningSettings:            versioningSettings,
 	}
 
-	if err := hcpClient.CreateNamespace(namespace); err == nil {
+	if err := hcpClient(m).CreateNamespace(namespace); err == nil {
 		d.SetId(name)
 		return nil
 	} else {
 		return err
 	}
 
+}
+
+func expandVersioningSettings(config []interface{}) hcp.VersioningSettings {
+	versioningSettingsConfig := config[0].(map[string]interface{})
+
+	return hcp.VersioningSettings{
+		Enabled:   versioningSettingsConfig["enabled"].(bool),
+		Prune:     versioningSettingsConfig["prune"].(bool),
+		PruneDays: versioningSettingsConfig["prune_days"].(int),
+	}
 }
 
 func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
@@ -99,9 +128,11 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNamespaceDelete(d *schema.ResourceData, m interface{}) error {
-	return nil
+	name := d.Get("name").(string)
+	return hcpClient(m).DeleteNamespace(name)
 }
 
-func resourceNamespaceExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	return false, nil
+func resourceNamespaceExists(d *schema.ResourceData, m interface{}) (bool, error) {
+	name := d.Get("name").(string)
+	return hcpClient(m).NamespaceExists(name)
 }
