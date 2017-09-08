@@ -108,23 +108,47 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 
 }
 
-func expandVersioningSettings(config []interface{}) hcp.VersioningSettings {
-	versioningSettingsConfig := config[0].(map[string]interface{})
+func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 
-	return hcp.VersioningSettings{
-		Enabled:   versioningSettingsConfig["enabled"].(bool),
-		Prune:     versioningSettingsConfig["prune"].(bool),
-		PruneDays: versioningSettingsConfig["prune_days"].(int),
+	name := d.Get("name").(string)
+	hardQuota := d.Get("hard_quota").(string)
+	softQuota := d.Get("soft_quota").(int)
+	replicationEnabled := d.Get("replication_enabled").(bool)
+	readFromReplica := d.Get("read_from_replica").(bool)
+
+	namespace := &hcp.Namespace{
+		Name:                          name,
+		HardQuota:                     hardQuota,
+		SoftQuota:                     softQuota,
+		ReplicationEnabled:            replicationEnabled,
+		ReadFromReplica:               readFromReplica,
+		EnterpriseMode:                defaultEnterpriseMode,
+		OptimizedFor:                  defaultOptimizedFor,
+		SearchEnabled:                 defaultSearchEnabled,
+		IndexingEnabled:               defaultIndexingEnabled,
+		CustomMetadataIndexingEnabled: defaultCustomMetadataIndexingEnabled,
+		ServiceRemoteSystemRequests:   deafultServiceRemoteSystemRequests,
+	}
+
+	if err := hcpClient(m).UpdateNamespace(namespace); err == nil {
+		d.SetId(name)
+		return nil
+	} else {
+		return err
 	}
 }
 
 func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
-	return nil
 
-}
+	name := d.Get("name").(string)
+	if namespace, err := hcpClient(m).Namespace(name); err == nil {
+		// TODO?
+		d.Set("soft_quota", namespace.SoftQuota)
+		return nil
+	} else {
+		return err
+	}
 
-func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
-	return nil
 }
 
 func resourceNamespaceDelete(d *schema.ResourceData, m interface{}) error {
@@ -135,4 +159,14 @@ func resourceNamespaceDelete(d *schema.ResourceData, m interface{}) error {
 func resourceNamespaceExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	name := d.Get("name").(string)
 	return hcpClient(m).NamespaceExists(name)
+}
+
+func expandVersioningSettings(config []interface{}) hcp.VersioningSettings {
+	versioningSettingsConfig := config[0].(map[string]interface{})
+
+	return hcp.VersioningSettings{
+		Enabled:   versioningSettingsConfig["enabled"].(bool),
+		Prune:     versioningSettingsConfig["prune"].(bool),
+		PruneDays: versioningSettingsConfig["prune_days"].(int),
+	}
 }
