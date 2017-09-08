@@ -113,6 +113,7 @@ func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 
 	username := d.Get("username").(string)
 	if userAccount, err := hcpClient(m).UserAccount(username); err == nil {
+		// TODO?
 		d.Set("full_name", userAccount.FullName)
 		return nil
 	} else {
