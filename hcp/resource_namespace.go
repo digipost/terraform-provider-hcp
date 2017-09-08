@@ -161,10 +161,10 @@ func resourceNamespaceExists(d *schema.ResourceData, m interface{}) (bool, error
 	return hcpClient(m).NamespaceExists(name)
 }
 
-func expandVersioningSettings(config []interface{}) hcp.VersioningSettings {
+func expandVersioningSettings(config []interface{}) *hcp.VersioningSettings {
 	versioningSettingsConfig := config[0].(map[string]interface{})
 
-	return hcp.VersioningSettings{
+	return &hcp.VersioningSettings{
 		Enabled:   versioningSettingsConfig["enabled"].(bool),
 		Prune:     versioningSettingsConfig["prune"].(bool),
 		PruneDays: versioningSettingsConfig["prune_days"].(int),
