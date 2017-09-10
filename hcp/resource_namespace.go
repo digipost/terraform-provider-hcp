@@ -5,16 +5,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	defaultHashScheme                    = hcp.SHA_512
-	defaultEnterpriseMode                = true
-	defaultOptimizedFor                  = hcp.CLOUD
-	defaultSearchEnabled                 = false
-	defaultIndexingEnabled               = false
-	defaultCustomMetadataIndexingEnabled = false
-	deafultServiceRemoteSystemRequests   = false
-)
-
 func resourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNamespaceCreate,
@@ -24,9 +14,10 @@ func resourceNamespace() *schema.Resource {
 		Exists: resourceNamespaceExists,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     false,
+				ValidateFunc: validateNamespaceName,
 			},
 			"hard_quota": {
 				Type:         schema.TypeString,
@@ -34,8 +25,10 @@ func resourceNamespace() *schema.Resource {
 				ValidateFunc: validateHardQuota,
 			},
 			"soft_quota": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      85,
+				ValidateFunc: validateSoftQuota,
 			},
 			"replication_enabled": {
 				Type:     schema.TypeBool,
@@ -44,6 +37,44 @@ func resourceNamespace() *schema.Resource {
 			"read_from_replica": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
+			},
+			"enterprise_mode": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"optimized_for": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      hcp.CLOUD,
+				ValidateFunc: validateOptimizedFor,
+			},
+			"search_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"indexing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"custom_metadata_indexing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"service_remote_system_requests": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"hash_scheme": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      hcp.SHA_512,
+				ValidateFunc: validateHashScheme,
 			},
 			"versioning_settings": {
 				Type:     schema.TypeList,
@@ -79,6 +110,14 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 	softQuota := d.Get("soft_quota").(int)
 	replicationEnabled := d.Get("replication_enabled").(bool)
 	readFromReplica := d.Get("read_from_replica").(bool)
+	enterpriseMode := d.Get("enterprise_mode").(bool)
+	optimizedFor := d.Get("optimized_for").(string)
+	searchEnabled := d.Get("search_enabled").(bool)
+	indexingEnabled := d.Get("indexing_enabled").(bool)
+	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
+	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
+
+	hashScheme := d.Get("hash_scheme").(string)
 
 	v := d.Get("versioning_settings").([]interface{})
 	versioningSettings := expandVersioningSettings(v)
@@ -89,13 +128,13 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 		SoftQuota:                     softQuota,
 		ReplicationEnabled:            replicationEnabled,
 		ReadFromReplica:               readFromReplica,
-		HashScheme:                    defaultHashScheme,
-		EnterpriseMode:                defaultEnterpriseMode,
-		OptimizedFor:                  defaultOptimizedFor,
-		SearchEnabled:                 defaultSearchEnabled,
-		IndexingEnabled:               defaultIndexingEnabled,
-		CustomMetadataIndexingEnabled: defaultCustomMetadataIndexingEnabled,
-		ServiceRemoteSystemRequests:   deafultServiceRemoteSystemRequests,
+		HashScheme:                    hashScheme,
+		EnterpriseMode:                enterpriseMode,
+		OptimizedFor:                  optimizedFor,
+		SearchEnabled:                 searchEnabled,
+		IndexingEnabled:               indexingEnabled,
+		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
+		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
 		VersioningSettings:            versioningSettings,
 	}
 
@@ -115,6 +154,12 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 	softQuota := d.Get("soft_quota").(int)
 	replicationEnabled := d.Get("replication_enabled").(bool)
 	readFromReplica := d.Get("read_from_replica").(bool)
+	enterpriseMode := d.Get("enterprise_mode").(bool)
+	optimizedFor := d.Get("optimized_for").(string)
+	searchEnabled := d.Get("search_enabled").(bool)
+	indexingEnabled := d.Get("indexing_enabled").(bool)
+	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
+	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
 
 	namespace := &hcp.Namespace{
 		Name:                          name,
@@ -122,12 +167,12 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 		SoftQuota:                     softQuota,
 		ReplicationEnabled:            replicationEnabled,
 		ReadFromReplica:               readFromReplica,
-		EnterpriseMode:                defaultEnterpriseMode,
-		OptimizedFor:                  defaultOptimizedFor,
-		SearchEnabled:                 defaultSearchEnabled,
-		IndexingEnabled:               defaultIndexingEnabled,
-		CustomMetadataIndexingEnabled: defaultCustomMetadataIndexingEnabled,
-		ServiceRemoteSystemRequests:   deafultServiceRemoteSystemRequests,
+		EnterpriseMode:                enterpriseMode,
+		OptimizedFor:                  optimizedFor,
+		SearchEnabled:                 searchEnabled,
+		IndexingEnabled:               indexingEnabled,
+		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
+		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
 	}
 
 	if err := hcpClient(m).UpdateNamespace(namespace); err == nil {
