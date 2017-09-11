@@ -82,6 +82,15 @@ func resourceNamespace() *schema.Resource {
 				Default:      hcp.ENFORCED,
 				ValidateFunc: validateAclsUsage,
 			},
+			"owner": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateOwnerType,
+			},
 			"versioning_settings": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -123,6 +132,8 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
 	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
 	aclsUsage := d.Get("acls_usage").(string)
+	owner := d.Get("owner").(string)
+	ownerType := d.Get("owner_type").(string)
 
 	hashScheme := d.Get("hash_scheme").(string)
 
@@ -143,7 +154,9 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
 		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
 		AclsUsage:                     aclsUsage,
+		OwnerType:                     ownerType,
 		VersioningSettings:            versioningSettings,
+		Owner:                         owner,
 	}
 
 	if err := hcpClient(m).CreateNamespace(namespace); err == nil {
@@ -169,6 +182,8 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
 	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
 	aclsUsage := d.Get("acls_usage").(string)
+	ownerType := d.Get("owner_type").(string)
+	owner := d.Get("owner").(string)
 
 	namespace := &hcp.Namespace{
 		Name:                          name,
@@ -182,6 +197,8 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 		IndexingEnabled:               indexingEnabled,
 		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
 		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
+		OwnerType:                     ownerType,
+		Owner:                         owner,
 		AclsUsage:                     aclsUsage,
 	}
 

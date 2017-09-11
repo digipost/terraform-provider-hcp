@@ -99,3 +99,16 @@ func validateAclsUsage(v interface{}, k string) (ws []string, errors []error) {
 	}
 	return
 }
+
+func validateOwnerType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	schemes := map[string]bool{
+		hcp.LOCAL:    true,
+		hcp.EXTERNAL: true,
+	}
+
+	if !schemes[value] {
+		errors = append(errors, fmt.Errorf("Namespace owner type usage uses an illegal value: '%s'", value))
+	}
+	return
+}
