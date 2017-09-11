@@ -76,6 +76,12 @@ func resourceNamespace() *schema.Resource {
 				Default:      hcp.SHA_512,
 				ValidateFunc: validateHashScheme,
 			},
+			"acls_usage": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      hcp.ENFORCED,
+				ValidateFunc: validateAclsUsage,
+			},
 			"versioning_settings": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -116,6 +122,7 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 	indexingEnabled := d.Get("indexing_enabled").(bool)
 	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
 	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
+	aclsUsage := d.Get("acls_usage").(string)
 
 	hashScheme := d.Get("hash_scheme").(string)
 
@@ -135,6 +142,7 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 		IndexingEnabled:               indexingEnabled,
 		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
 		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
+		AclsUsage:                     aclsUsage,
 		VersioningSettings:            versioningSettings,
 	}
 
@@ -160,6 +168,7 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 	indexingEnabled := d.Get("indexing_enabled").(bool)
 	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
 	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
+	aclsUsage := d.Get("acls_usage").(string)
 
 	namespace := &hcp.Namespace{
 		Name:                          name,
@@ -173,6 +182,7 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 		IndexingEnabled:               indexingEnabled,
 		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
 		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
+		AclsUsage:                     aclsUsage,
 	}
 
 	if err := hcpClient(m).UpdateNamespace(namespace); err == nil {

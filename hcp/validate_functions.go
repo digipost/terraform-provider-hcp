@@ -85,3 +85,17 @@ func validateOptimizedFor(v interface{}, k string) (ws []string, errors []error)
 	}
 	return
 }
+
+func validateAclsUsage(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	schemes := map[string]bool{
+		hcp.NOT_ENABLED:  true,
+		hcp.NOT_ENFORCED: true,
+		hcp.ENFORCED:     true,
+	}
+
+	if !schemes[value] {
+		errors = append(errors, fmt.Errorf("Namespace acls usage uses an illegal value: '%s'", value))
+	}
+	return
+}
