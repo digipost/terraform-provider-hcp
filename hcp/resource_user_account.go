@@ -7,11 +7,7 @@ import (
 )
 
 const (
-	defaultLocalAuthentication      = true
-	defaultEnabled                  = true
-	defaultForcePasswordChange      = false
-	defaultDescription              = "User is managed by Terraform"
-	defaultAllowNamespaceManagement = false
+	defaultDescription = "User is managed by Terraform"
 )
 
 var defaultRoles = []string{hcp.MONITOR}
@@ -35,10 +31,29 @@ func resourceUserAccount() *schema.Resource {
 				Sensitive:        true,
 				DiffSuppressFunc: suppressPasswordDiffs,
 			},
-
 			"full_name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"local_authentication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"force_password_change": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"allow_namespace_management": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 		},
 	}
@@ -49,15 +64,20 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
+	enabled := d.Get("enabled").(bool)
+	forcePasswordChange := d.Get("force_password_change").(bool)
+	allowNamespaceManagement := d.Get("allow_namespace_management").(bool)
+
+	localAuthentication := d.Get("local_authentication").(bool)
 
 	uA := &hcp.UserAccount{
 		Username:                 username,
 		FullName:                 fullName,
 		Description:              defaultDescription,
-		LocalAuthentication:      defaultLocalAuthentication,
-		ForcePasswordChange:      defaultForcePasswordChange,
-		Enabled:                  defaultEnabled,
-		AllowNamespaceManagement: defaultAllowNamespaceManagement,
+		LocalAuthentication:      localAuthentication,
+		ForcePasswordChange:      forcePasswordChange,
+		Enabled:                  enabled,
+		AllowNamespaceManagement: allowNamespaceManagement,
 		Roles: defaultRoles,
 	}
 
@@ -76,14 +96,17 @@ func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
+	enabled := d.Get("enabled").(bool)
+	forcePasswordChange := d.Get("force_password_change").(bool)
+	allowNamespaceManagement := d.Get("allow_namespace_management").(bool)
 
 	uA := &hcp.UserAccount{
 		Username:                 username,
 		FullName:                 fullName,
 		Description:              defaultDescription,
-		ForcePasswordChange:      defaultForcePasswordChange,
-		Enabled:                  defaultEnabled,
-		AllowNamespaceManagement: defaultAllowNamespaceManagement,
+		ForcePasswordChange:      forcePasswordChange,
+		Enabled:                  enabled,
+		AllowNamespaceManagement: allowNamespaceManagement,
 		Roles: defaultRoles,
 	}
 
