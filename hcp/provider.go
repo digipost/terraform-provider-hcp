@@ -27,6 +27,12 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("HCP_MAPI_URL", nil),
 				Description: "The url of the HCP MAPI",
 			},
+			"insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Ignore TLS validation errors",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"hcp_user_account": resourceUserAccount(),
@@ -42,7 +48,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		URL:      d.Get("mapi_url").(string),
-		Insecure: true,
+		Insecure: d.Get("insecure").(bool),
 	}, nil
 
 }
