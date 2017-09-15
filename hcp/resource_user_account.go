@@ -6,10 +6,6 @@ import (
 	"log"
 )
 
-const (
-	defaultDescription = "User is managed by Terraform"
-)
-
 var defaultRoles = []string{hcp.MONITOR}
 
 func resourceUserAccount() *schema.Resource {
@@ -40,6 +36,11 @@ func resourceUserAccount() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "User is managed by Terraform",
+			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -64,6 +65,7 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
+	description := d.Get("description").(string)
 	enabled := d.Get("enabled").(bool)
 	forcePasswordChange := d.Get("force_password_change").(bool)
 	allowNamespaceManagement := d.Get("allow_namespace_management").(bool)
@@ -73,7 +75,7 @@ func resourceUserAccountCreate(d *schema.ResourceData, m interface{}) error {
 	uA := &hcp.UserAccount{
 		Username:                 username,
 		FullName:                 fullName,
-		Description:              defaultDescription,
+		Description:              description,
 		LocalAuthentication:      localAuthentication,
 		ForcePasswordChange:      forcePasswordChange,
 		Enabled:                  enabled,
@@ -96,6 +98,7 @@ func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	fullName := d.Get("full_name").(string)
+	description := d.Get("description").(string)
 	enabled := d.Get("enabled").(bool)
 	forcePasswordChange := d.Get("force_password_change").(bool)
 	allowNamespaceManagement := d.Get("allow_namespace_management").(bool)
@@ -103,7 +106,7 @@ func resourceUserAccountUpdate(d *schema.ResourceData, m interface{}) error {
 	uA := &hcp.UserAccount{
 		Username:                 username,
 		FullName:                 fullName,
-		Description:              defaultDescription,
+		Description:              description,
 		ForcePasswordChange:      forcePasswordChange,
 		Enabled:                  enabled,
 		AllowNamespaceManagement: allowNamespaceManagement,
@@ -136,8 +139,13 @@ func resourceUserAccountRead(d *schema.ResourceData, m interface{}) error {
 
 	username := d.Get("username").(string)
 	if userAccount, err := hcpClient(m).ReadUserAccount(username); err == nil {
-		// TODO?
+
 		d.Set("full_name", userAccount.FullName)
+		d.Set("description", userAccount.Description)
+		d.Set("enabled", userAccount.Enabled)
+		d.Set("force_password_change", userAccount.ForcePasswordChange)
+		d.Set("allow_namespace_management", userAccount.AllowNamespaceManagement)
+
 		return nil
 	} else {
 		return err
