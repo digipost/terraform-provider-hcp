@@ -213,7 +213,7 @@ func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
-	if namespace, err := hcpClient(m).Namespace(name); err == nil {
+	if namespace, err := hcpClient(m).ReadNamespace(name); err == nil {
 		// TODO?
 		d.Set("soft_quota", namespace.SoftQuota)
 		return nil
