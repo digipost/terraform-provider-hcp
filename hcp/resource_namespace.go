@@ -216,9 +216,18 @@ func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 	if namespace, err := hcpClient(m).ReadNamespace(name); err == nil {
-		// TODO
 		d.Set("soft_quota", namespace.SoftQuota)
 		d.Set("hard_quota", namespace.HardQuota)
+		d.Set("replication_enabled", namespace.ReplicationEnabled)
+		d.Set("read_from_replica", namespace.ReadFromReplica)
+		d.Set("enterprise_mode", namespace.EnterpriseMode)
+		d.Set("optimized_for", namespace.OptimizedFor)
+		d.Set("search_enabled", namespace.SearchEnabled)
+		d.Set("indexing_enabled", namespace.IndexingEnabled)
+		d.Set("custom_metadata_indexing_enabled", namespace.CustomMetadataIndexingEnabled)
+		d.Set("service_remote_system_requests", namespace.ServiceRemoteSystemRequests)
+		d.Set("acls_usage", namespace.AclsUsage)
+		d.Set("owner", namespace.Owner)
 
 		return nil
 	} else {
