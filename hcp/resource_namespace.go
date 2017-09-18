@@ -20,9 +20,10 @@ func resourceNamespace() *schema.Resource {
 				ValidateFunc: validateNamespaceName,
 			},
 			"hard_quota": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateHardQuota,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validateHardQuota,
+				DiffSuppressFunc: suppressHardQuotaDiffs,
 			},
 			"soft_quota": {
 				Type:         schema.TypeInt,
@@ -215,8 +216,10 @@ func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 	if namespace, err := hcpClient(m).ReadNamespace(name); err == nil {
-		// TODO?
+		// TODO
 		d.Set("soft_quota", namespace.SoftQuota)
+		d.Set("hard_quota", namespace.HardQuota)
+
 		return nil
 	} else {
 		return err
