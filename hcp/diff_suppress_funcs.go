@@ -28,6 +28,9 @@ func suppressHardQuotaDiffs(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func normalizeHardQuota(hardQuota string) string {
+	if hardQuota == "" {
+		return hardQuota
+	}
 	split := strings.Split(hardQuota, " ")
 	number := split[0]
 	unit := split[1]
