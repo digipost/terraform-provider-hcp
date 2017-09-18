@@ -74,6 +74,7 @@ func resourceNamespace() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      hcp.SHA_512,
+				ForceNew:     true,
 				ValidateFunc: validateHashScheme,
 			},
 			"acls_usage": {
