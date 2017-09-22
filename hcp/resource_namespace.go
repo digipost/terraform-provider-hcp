@@ -116,6 +116,59 @@ func resourceNamespace() *schema.Resource {
 					},
 				},
 			},
+			"http_protocol": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hs3_enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"hs3_requires_authentication": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"http_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"https_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"rest_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"rest_requires_authentication": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"allow_addresses": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"deny_addresses": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"allow_if_in_both_lists": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -139,8 +192,7 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 
 	hashScheme := d.Get("hash_scheme").(string)
 
-	v := d.Get("versioning_settings").([]interface{})
-	versioningSettings := expandVersioningSettings(v)
+	versioningSettings := expandVersioningSettings(d.Get("versioning_settings").([]interface{}))
 
 	namespace := &hcp.Namespace{
 		Name:                          name,
@@ -172,44 +224,65 @@ func resourceNamespaceCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceNamespaceUpdate(d *schema.ResourceData, m interface{}) error {
 
+	d.Partial(true)
+
 	name := d.Get("name").(string)
-	hardQuota := d.Get("hard_quota").(string)
-	softQuota := d.Get("soft_quota").(int)
-	replicationEnabled := d.Get("replication_enabled").(bool)
-	readFromReplica := d.Get("read_from_replica").(bool)
-	enterpriseMode := d.Get("enterprise_mode").(bool)
-	optimizedFor := d.Get("optimized_for").(string)
-	searchEnabled := d.Get("search_enabled").(bool)
-	indexingEnabled := d.Get("indexing_enabled").(bool)
-	customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
-	serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
-	aclsUsage := d.Get("acls_usage").(string)
-	ownerType := d.Get("owner_type").(string)
-	owner := d.Get("owner").(string)
 
-	namespace := &hcp.Namespace{
-		Name:                          name,
-		HardQuota:                     hardQuota,
-		SoftQuota:                     softQuota,
-		ReplicationEnabled:            replicationEnabled,
-		ReadFromReplica:               readFromReplica,
-		EnterpriseMode:                enterpriseMode,
-		OptimizedFor:                  optimizedFor,
-		SearchEnabled:                 searchEnabled,
-		IndexingEnabled:               indexingEnabled,
-		CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
-		ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
-		OwnerType:                     ownerType,
-		Owner:                         owner,
-		AclsUsage:                     aclsUsage,
+	if d.HasChange("namespace") {
+
+		hardQuota := d.Get("hard_quota").(string)
+		softQuota := d.Get("soft_quota").(int)
+		replicationEnabled := d.Get("replication_enabled").(bool)
+		readFromReplica := d.Get("read_from_replica").(bool)
+		enterpriseMode := d.Get("enterprise_mode").(bool)
+		optimizedFor := d.Get("optimized_for").(string)
+		searchEnabled := d.Get("search_enabled").(bool)
+		indexingEnabled := d.Get("indexing_enabled").(bool)
+		customMetadataIndexingEnabled := d.Get("custom_metadata_indexing_enabled").(bool)
+		serviceRemoteSystemRequests := d.Get("service_remote_system_requests").(bool)
+		aclsUsage := d.Get("acls_usage").(string)
+		ownerType := d.Get("owner_type").(string)
+		owner := d.Get("owner").(string)
+
+		namespace := &hcp.Namespace{
+			Name:                          name,
+			HardQuota:                     hardQuota,
+			SoftQuota:                     softQuota,
+			ReplicationEnabled:            replicationEnabled,
+			ReadFromReplica:               readFromReplica,
+			EnterpriseMode:                enterpriseMode,
+			OptimizedFor:                  optimizedFor,
+			SearchEnabled:                 searchEnabled,
+			IndexingEnabled:               indexingEnabled,
+			CustomMetadataIndexingEnabled: customMetadataIndexingEnabled,
+			ServiceRemoteSystemRequests:   serviceRemoteSystemRequests,
+			OwnerType:                     ownerType,
+			Owner:                         owner,
+			AclsUsage:                     aclsUsage,
+		}
+
+		if errNamespace := hcpClient(m).UpdateNamespace(namespace); errNamespace == nil {
+			d.SetId(name)
+			d.SetPartial("namespace")
+		} else {
+			return errNamespace
+		}
 	}
 
-	if err := hcpClient(m).UpdateNamespace(namespace); err == nil {
-		d.SetId(name)
-		return nil
-	} else {
-		return err
+	if d.HasChange("http_protocol") {
+
+		httpProtocol := expandHttpProtocol(d.Get("http_protocol").([]interface{}))
+
+		if errProtocolHttp := hcpClient(m).UpdateNamespaceProtocolHttp(name, httpProtocol); errProtocolHttp == nil {
+			d.SetPartial("http_protocol")
+		} else {
+			return errProtocolHttp
+		}
+
 	}
+
+	return nil
+
 }
 
 func resourceNamespaceRead(d *schema.ResourceData, m interface{}) error {
@@ -244,6 +317,39 @@ func resourceNamespaceDelete(d *schema.ResourceData, m interface{}) error {
 func resourceNamespaceExists(d *schema.ResourceData, m interface{}) (bool, error) {
 	name := d.Get("name").(string)
 	return hcpClient(m).NamespaceExists(name)
+}
+
+func expandHttpProtocol(config []interface{}) *hcp.HttpProtocol {
+
+	httpProtocolConfig := config[0].(map[string]interface{})
+
+	hs3Enabled := httpProtocolConfig["hs3_enabled"].(bool)
+	hs3RequiresAuthentication := httpProtocolConfig["hs3_requires_authentication"].(bool)
+	httpEnabled := httpProtocolConfig["http_enabled"].(bool)
+	httpsEnabled := httpProtocolConfig["https_enabled"].(bool)
+	restEnabled := httpProtocolConfig["rest_enabled"].(bool)
+	restRequiresAuthentication := httpProtocolConfig["rest_requires_authentication"].(bool)
+	//allowAddresses := httpProtocolConfig["allow_addresses"].([]interface{})
+	//denyAddresses := httpProtocolConfig["deny_addresses"].([]interface{})
+	allowIfInBothLists := httpProtocolConfig["allow_if_in_both_lists"].(bool)
+
+	httpProtocol := &hcp.HttpProtocol{
+
+		Hs3Enabled:                 hs3Enabled,
+		Hs3RequiresAuthentication:  hs3RequiresAuthentication,
+		HttpEnabled:                httpEnabled,
+		HttpsEnabled:               httpsEnabled,
+		RestEnabled:                restEnabled,
+		RestRequiresAuthentication: restRequiresAuthentication,
+		IpSettings: &hcp.IpSettings{
+			//AllowAddresses:     []string{""},
+			//DenyAddresses:      []string{""},
+			AllowIfInBothLists: allowIfInBothLists,
+		},
+	}
+
+	return httpProtocol
+
 }
 
 func expandVersioningSettings(config []interface{}) *hcp.VersioningSettings {
